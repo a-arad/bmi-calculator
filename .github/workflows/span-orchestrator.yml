@@ -1,0 +1,105 @@
+name: Span Task Orchestrator
+on:
+  repository_dispatch:
+    types: [span-task, span-coordinate, span-retry]
+
+jobs:
+  execute-task:
+    if: github.event.action == 'span-task'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Execute Claude Code Task
+        uses: anthropics/claude-code-base-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt_file: ".span/tasks/${{ github.event.client_payload.task_id }}.md"
+          allowed_tools: "Bash(git:*),Edit,View,GlobTool,GrepTool,Replace"
+          max_turns: "${{ github.event.client_payload.max_turns || '15' }}"
+          claude_env: |
+            SPAN_TASK_ID: ${{ github.event.client_payload.task_id }}
+            SPAN_COMPONENT: ${{ github.event.client_payload.component }}
+            SPAN_PHASE: ${{ github.event.client_payload.phase }}
+            SPAN_DEPENDENCIES: ${{ join(github.event.client_payload.dependencies, ',') }}
+            SPAN_RETRY_COUNT: ${{ github.event.client_payload.retry_count || '0' }}
+
+      - name: Report Task Completion
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Create completion tracking issue
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Span] Task ${{ github.event.client_payload.task_id }} completed`,
+              body: `✅ Task completed successfully.\n\nComponent: ${{ github.event.client_payload.component }}\nPhase: ${{ github.event.client_payload.phase }}\n\nCheck associated PR for implementation details.`,
+              labels: ['span-completed', '${{ github.event.client_payload.component }}']
+            });
+            
+            // Trigger dependency coordination
+            await github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'span-coordinate',
+              client_payload: {
+                completed_task: '${{ github.event.client_payload.task_id }}',
+                component: '${{ github.event.client_payload.component }}'
+              }
+            });
+
+      - name: Report Task Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Span] Task ${{ github.event.client_payload.task_id }} failed`,
+              body: `❌ Task failed during execution.\n\nComponent: ${{ github.event.client_payload.component }}\nRetry Count: ${{ github.event.client_payload.retry_count || '0' }}\n\nRequires investigation and potential retry.`,
+              labels: ['span-failed', 'needs-investigation', '${{ github.event.client_payload.component }}']
+            });
+
+  coordinate-dependencies:
+    if: github.event.action == 'span-coordinate'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Dependencies and Trigger Ready Tasks
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // This is a simplified coordination step
+            // In a full implementation, this would:
+            // 1. Check which tasks are now ready (dependencies satisfied)
+            // 2. Trigger repository dispatch events for ready tasks
+            // 3. Update orchestration state
+            
+            console.log(`Task completed: ${context.payload.client_payload.completed_task}`);
+            console.log('Checking for newly ready tasks...');
+            
+            // TODO: Implement full dependency resolution logic
+
+  retry-task:
+    if: github.event.action == 'span-retry'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Retry Claude Code Task with Enhanced Context
+        uses: anthropics/claude-code-base-action@beta
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt_file: ".span/tasks/${{ github.event.client_payload.task_id }}.md"
+          allowed_tools: "Bash(git:*),Edit,View,GlobTool,GrepTool,Replace"
+          max_turns: "${{ github.event.client_payload.max_turns || '15' }}"
+          claude_env: |
+            SPAN_TASK_ID: ${{ github.event.client_payload.task_id }}
+            SPAN_COMPONENT: ${{ github.event.client_payload.component }}
+            SPAN_RETRY_COUNT: ${{ github.event.client_payload.retry_count }}
+            SPAN_FAILURE_CONTEXT: ${{ github.event.client_payload.failure_context }}
+            SPAN_ENHANCED_GUIDANCE: ${{ github.event.client_payload.enhanced_guidance }}
