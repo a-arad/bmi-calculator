@@ -1,0 +1,74 @@
+# span Task: Setup Vercel Deployment (ID: deployment)
+
+## Task Description
+Configure and deploy frontend and backend to Vercel
+
+## Component & Technical Context
+**Component:** infrastructure
+**Estimated Complexity:** 8 Claude Code conversation turns
+**Current Retry:** 0 (if > 0, review previous failure context)
+
+## Dependencies & Prerequisites
+**Required tasks:** integration, fe-tests, be-tests
+
+⚠️ Ensure these tasks are completed before proceeding. Check their PRs and integration status.
+
+## Environment Variables
+```
+DELIVERABLES: vercel.json,.env.example
+TASK_COMPONENT: infrastructure
+ESTIMATED_TURNS: 8
+```
+
+## Deliverables & Success Criteria
+This task must produce:
+- **Primary Implementation:** Concrete, working code files
+- **Testing:** Comprehensive tests that validate functionality
+- **Documentation:** Update relevant docs (README, API docs, etc.)
+- **Pull Request:** Clear PR with descriptive title and body
+- **Integration:** Ensure no breaking changes to existing functionality
+
+## Claude Code Execution Guidelines
+
+### Turn Management (Max: 8 turns)
+1. **Planning Phase** (1-2 turns): Understand requirements, explore codebase
+2. **Implementation Phase** (60-70% of turns): Core development work
+3. **Testing Phase** (20-30% of turns): Validation and edge cases  
+4. **Finalization** (1-2 turns): Documentation, PR creation
+
+### Required Actions
+- [ ] Read and follow project conventions in `/CLAUDE.md`
+- [ ] Use appropriate tools: `Edit`, `View`, `Bash(git:*)`, `GrepTool`, `Replace`
+- [ ] Run tests to validate implementation: `npm test` / `cargo test` / `pytest`
+- [ ] Create meaningful commit messages following project standards
+- [ ] Open PR with labels: `span-task`, `infrastructure`
+
+### Error Handling & Quality
+- Handle edge cases and error conditions explicitly
+- Follow security best practices (input validation, no hardcoded secrets)
+- Use existing patterns and utilities in the codebase
+- Optimize for readability and maintainability
+
+## span Orchestration Context
+- **Project Repository:** bmi-calculator
+- **Orchestration System:** This task is part of span's AI-coordinated development
+- **Progress Tracking:** Completion will be tracked via GitHub issues automatically
+- **Dependency Chain:** Completing this task may trigger dependent tasks
+- **Failure Recovery:** Failures create investigation issues for human review
+
+## Implementation Strategy
+Based on the component type `infrastructure`, consider:
+
+- Configure development and deployment environments
+- Set up CI/CD pipelines and automation
+- Implement monitoring and logging
+- Configure security and access controls
+- Document deployment procedures
+
+## Final Notes
+- **Time Budget:** Complete within 8 conversation turns maximum
+- **Focus:** Incremental progress with each turn producing measurable results
+- **Communication:** Clear commit messages and PR descriptions for human reviewers
+- **Integration:** Coordinate with existing codebase patterns and dependencies
+
+Ready to begin implementation. Start by exploring the codebase to understand the current state and integration points.
